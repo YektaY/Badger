@@ -380,4 +380,3 @@ The existing envs could boost up your new env development process since Badger s
 For now, you could simply create a folder named after your env under the `$BADGER_PLUGIN_ROOT/environments` directory, where `$BADGER_PLUGIN_ROOT` is the value for key `BADGER_PLUGIN_ROOT` when you run `badger config`, and put the `__init__.py`, `configs.yaml`, and an optional `README.md` into your env folder.
 
 You can then `badger env` to see if your environment is there.
-#
