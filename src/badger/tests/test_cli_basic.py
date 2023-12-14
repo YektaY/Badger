@@ -19,7 +19,7 @@ def test_cli_main():
 
     # Check output lines
     outlines = out.splitlines()
-    assert len(outlines) == 6
+    assert len(outlines) == 7
 
     # Check name
     assert outlines[0] == 'name: Badger the optimizer'
@@ -39,7 +39,7 @@ def test_list_algo():
     assert exitcode == 0
 
     # Check output lines
-    outlines = out.split('\n')
+    outlines = out.splitlines()
     assert '- upper_confidence_bound' in outlines
 
 
