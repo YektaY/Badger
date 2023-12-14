@@ -69,8 +69,5 @@ jobs:
     - name: Test with pytest
       shell: bash -el {0}
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          python run_tests.py -RunAsAdmin
-        else
-          python run_tests.py
-        fi
+          python run_tests.py 
+
