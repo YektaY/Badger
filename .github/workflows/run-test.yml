@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-14]
         python-version: [3.9, 3.11]
     env:
       DISPLAY: ':99.0'
@@ -46,7 +46,8 @@ jobs:
           mamba install flake8 zipp 
           mamba install --file requirements.txt --file windows-dev-requirements.txt
         else
-          mamba install flake8 zipp $(cat requirements.txt)
+          mamba install flake8 zipp 
+          mamba install --file requirements.txt
         fi
     - name: Install pyqt5
       shell: bash -el {0}
