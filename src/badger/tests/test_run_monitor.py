@@ -64,7 +64,7 @@ def test_run_monitor(qtbot):
     spy = QSignalSpy(monitor.routine_runner.signals.progress)
     assert spy.isValid()
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
-    time.sleep(1)
+    qtbot.wait(1000)
     QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
 
@@ -114,6 +114,7 @@ def test_click_graph(qtbot, mocker):
     orginal_value = monitor.inspector_variable.value()
 
     monitor.on_mouse_click(mock_event)
+    qtbot.wait(1000)
     new_variable_value = monitor.inspector_variable.value()
 
     assert new_variable_value != orginal_value
@@ -228,7 +229,7 @@ def test_y_axis_specification(qtbot):
     normalized_raw_value = monitor.curves_variable["x0"].getData()[1][index]
     assert normalized_raw_value == 0.75
 
-    
+
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor(add_data=False)
 
