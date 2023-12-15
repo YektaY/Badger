@@ -2,10 +2,10 @@ import time
 import numpy as np
 from unittest.mock import patch
 
-from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtCore import QPointF, Qt, QPoint
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtTest import QSignalSpy, QTest
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QMainWindow
 
 
 def create_test_run_monitor(add_data=True):
@@ -112,6 +112,7 @@ def test_click_graph(qtbot, mocker):
     mock_event._scenePos = QPointF(350, 240)
 
     orginal_value = monitor.inspector_variable.value()
+
     monitor.on_mouse_click(mock_event)
     new_variable_value = monitor.inspector_variable.value()
 
@@ -166,7 +167,6 @@ def test_x_axis_specification(qtbot, mocker):
 
     mock_event = mocker.MagicMock(spec=QMouseEvent)
     mock_event._scenePos = QPointF(550, 250)
-
     monitor.on_mouse_click(mock_event)
 
     # Check type of value
@@ -186,18 +186,28 @@ def test_x_axis_specification(qtbot, mocker):
 
 
 def test_y_axis_specification(qtbot):
-    monitor = create_test_run_monitor()
+    monitor = create_test_run_monitor(add_data=False)
+    monitor.termination_condition = {
+        "tc_idx": 0,
+        "max_eval": 10,
+    }
+    monitor.start(True)
+
+    # Wait until the run is done
+    while monitor.running:
+        qtbot.wait(100)
+
     select_x_plot_y_axis_spy = QSignalSpy(monitor.cb_plot_y.currentIndexChanged)
     index = monitor.inspector_variable.value()
-    
+
     monitor.check_relative.setChecked(False)
 
     # check raw - non relative
     monitor.cb_plot_y.setCurrentIndex(0)
     assert len(select_x_plot_y_axis_spy) == 0  # since 0 is the default value
     raw_value = monitor.curves_variable["x0"].getData()[1][index]
-    assert raw_value == 0.5 
-    
+    assert raw_value == 0.5
+
     # relative
     monitor.check_relative.setChecked(True)
 
@@ -210,14 +220,15 @@ def test_y_axis_specification(qtbot):
     assert len(select_x_plot_y_axis_spy) == 1
 
     normalized_relative_value = monitor.curves_variable["x0"].getData()[1][index]
-    assert normalized_relative_value == 0.0 
+    assert normalized_relative_value == 0.0
 
-    # raw normalized 
+    # raw normalized
     monitor.check_relative.setChecked(False)
 
     normalized_raw_value = monitor.curves_variable["x0"].getData()[1][index]
     assert normalized_raw_value == 0.75
 
+    
 def test_pause_play(qtbot):
     monitor = create_test_run_monitor(add_data=False)
 
