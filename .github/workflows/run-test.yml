@@ -38,7 +38,7 @@ jobs:
     - name: Install xopt 
       shell: bash -el {0}
       run: |
-          pip install xopt
+          pip install --user xopt
     - name: Install python packages
       shell: bash -el {0}
       run: |
