@@ -1,12 +1,14 @@
 import logging
-
 logger = logging.getLogger(__name__)
-import time
-from pandas import DataFrame
-from PyQt5.QtCore import pyqtSignal, QObject, QRunnable
-from ....core import run_routine, Routine
-from ....errors import BadgerRunTerminatedError
 
+import time
+from multiprocessing import Queue, Process, Event
+from pandas import DataFrame
+from PyQt5.QtCore import pyqtSignal, QObject, QRunnable, QTimer
+from ....core import run_routine, Routine
+from ....core_subprocess import run_routine_subprocess
+
+from ....errors import BadgerRunTerminatedError
 
 class BadgerRoutineSignals(QObject):
     env_ready = pyqtSignal(list)
@@ -156,3 +158,108 @@ class BadgerRoutineRunner(QRunnable):
 
     def stop_routine(self):
         self.is_killed = True
+
+
+class BadgerRoutineSubprocess():
+    """
+        launches suprocess to run routine using code in core.py
+    """
+
+    def __init__(self, routine: Routine, save: bool, verbose=2, use_full_ts=False):
+        """
+        Parameters
+        ----------
+        routine: Routine
+            Defined routine for runner
+
+        save: bool
+            Flag to enable saving to database
+
+        verbose: int, default: 2
+            Verbostiy level (higher is more output)
+
+        use_full_ts: bool
+            If true use full time stamp info when dumping to database
+        """
+        super().__init__()
+
+        # Signals should belong to instance rather than class
+        # Since there could be multiple runners running in parallel
+        self.signals = BadgerRoutineSignals()
+
+        self.routine = routine
+        self.run_filename = None
+        self.states = None  # system states to be saved at start of a run
+        self.save = save
+        self.verbose = verbose
+        self.use_full_ts = use_full_ts
+        self.termination_condition = None  # additional option to control the optimization flow
+        self.start_time = None  # track the time cost of the run
+        self.last_dump_time = None  # track the time the run data got dumped
+
+    def set_termination_condition(self, termination_condition):
+        self.termination_condition = termination_condition
+
+    def run(self) -> None:
+        self.start_time = time.time()
+        self.last_dump_time = None  # reset the timer
+
+        try:
+            self.save_init_vars()
+            
+            self.data_queue = Queue()
+            self.stop_event = Event()
+            self.pause_event = Event()
+
+            self.routine_process = Process(target=run_routine_subprocess, args=(self.data_queue, self.stop_event, self.pause_event))
+            self.routine_process.start()
+            
+            self.setup_timer()
+            self.routine.data = None # reset data
+            arg_dict = {
+                'routine': self.routine,
+                'termination_condition': self.termination_condition}
+            self.data_queue.put(arg_dict)
+
+        except BadgerRunTerminatedError as e:
+            self.signals.finished.emit()
+            self.signals.info.emit(str(e))
+        except Exception as e:
+            print(e)
+            self.signals.finished.emit()
+            self.signals.error.emit(e)
+
+    def setup_timer(self):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.check_queue)
+        self.timer.start(50) # hmm 50 milliseconds 
+
+    def check_queue(self):
+        if not self.data_queue.empty():
+            results = self.data_queue.get()
+            self.after_evaluate()
+
+    def after_evaluate(self):
+        self.signals.progress.emit()
+        time.sleep(0.1)
+
+    def save_init_vars(self):
+        var_names = self.routine.vocs.variable_names
+        var_dict = self.routine.environment._get_variables(var_names)
+        init_vars = list(var_dict.values())
+        self.signals.env_ready.emit(init_vars)
+
+    def stop_routine(self):
+        self.stop_event.set()
+        self.routine_process.join(timeout=0.7) # hmm 0.7 seconds 
+        
+        if self.routine_process.is_alive():
+            self.routine_process.terminate()
+        
+        self.timer.stop()
+
+    def ctrl_routine(self, pause):
+        if pause:
+            self.pause_event.set()
+        else:
+            self.pause_event.clear()

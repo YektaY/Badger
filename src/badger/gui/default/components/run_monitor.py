@@ -12,13 +12,15 @@ import pyqtgraph as pg
 from xopt import VOCS
 
 from .extensions_palette import ExtensionsPalette
-from .routine_runner import BadgerRoutineRunner
+from .routine_runner import BadgerRoutineRunner, BadgerRoutineSubprocess
 from ..utils import create_button
 from ..windows.terminition_condition_dialog import BadgerTerminationConditionDialog
 from ....routine import Routine
 # from ...utils import AURORA_PALETTE, FROST_PALETTE
 from ....logbook import send_to_logbook, BADGER_LOGBOOK_ROOT
 from ....archive import archive_run, BADGER_ARCHIVE_ROOT
+
+from multiprocessing import shared_memory
 
 # disable chained assignment warning from pydantic
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -541,9 +543,13 @@ class BadgerOptMonitor(QWidget):
     def init_routine_runner(self):
         self.reset_routine_runner()
 
-        self.routine_runner = routine_runner = BadgerRoutineRunner(
-            self.routine, False
-        )
+        test = True 
+
+        if test:
+            self.routine_runner = routine_runner = BadgerRoutineSubprocess(self.routine, False)
+        else:
+            self.routine_runner = routine_runner = BadgerRoutineRunner(self.routine, False)
+                                                                           
         routine_runner.signals.env_ready.connect(self.env_ready)
         routine_runner.signals.finished.connect(self.routine_finished)
         routine_runner.signals.progress.connect(self.update)
@@ -566,8 +572,8 @@ class BadgerOptMonitor(QWidget):
         if use_termination_condition:
             self.routine_runner.set_termination_condition(self.termination_condition)
         self.running = True  # if a routine runner is working
-        self.thread_pool.start(self.routine_runner)
-
+        #self.thread_pool.start(self.routine_runner)
+        self.routine_runner.run()
         self.btn_stop.setStyleSheet(stylesheet_stop)
         self.btn_stop.setPopupMode(QToolButton.DelayedPopup)
         self.run_action.setText('Stop')
