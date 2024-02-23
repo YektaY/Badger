@@ -546,6 +546,7 @@ class BadgerOptMonitor(QWidget):
         test = True 
 
         if test:
+            print(self.routine)
             self.routine_runner = routine_runner = BadgerRoutineSubprocess(self.routine, False)
         else:
             self.routine_runner = routine_runner = BadgerRoutineRunner(self.routine, False)
@@ -568,6 +569,7 @@ class BadgerOptMonitor(QWidget):
     def start(self, use_termination_condition=False):
         self.sig_new_run.emit()
         self.init_plots(self.routine)
+        print(type(self.routine), "routine type", self.routine)
         self.init_routine_runner()
         if use_termination_condition:
             self.routine_runner.set_termination_condition(self.termination_condition)

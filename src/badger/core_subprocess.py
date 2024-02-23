@@ -1,7 +1,7 @@
 import typing
 import time
 from pandas import concat, DataFrame
-
+import logging
 from badger.errors import (
     BadgerRunTerminatedError,
 )
@@ -79,11 +79,22 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
 
     pause_process : 
     """
+    
+    logger = logging.getLogger()
+    handler = logging.FileHandler('subprocess.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    
     args = queue.get()
 
     # set required arguments 
     routine = args['routine']
-    
+
+    #logger.info(f"type {type(routine)}")
+    logger.info(f"data {routine}")
+
     # set optional arguments 
     try:
         evaluate = args['evaluate']

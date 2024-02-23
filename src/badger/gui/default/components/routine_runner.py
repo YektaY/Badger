@@ -7,7 +7,7 @@ from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable, QTimer
 from ....core import run_routine, Routine
 from ....core_subprocess import run_routine_subprocess
-
+import yaml
 from ....errors import BadgerRunTerminatedError
 
 class BadgerRoutineSignals(QObject):
@@ -197,6 +197,11 @@ class BadgerRoutineSubprocess():
         self.start_time = None  # track the time cost of the run
         self.last_dump_time = None  # track the time the run data got dumped
 
+        self.data_queue = None
+        self.stop_event = None
+        self.pause_event = None 
+        self.routine_process = None 
+
     def set_termination_condition(self, termination_condition):
         self.termination_condition = termination_condition
 
@@ -206,20 +211,20 @@ class BadgerRoutineSubprocess():
 
         try:
             self.save_init_vars()
-            
+
             self.data_queue = Queue()
             self.stop_event = Event()
             self.pause_event = Event()
 
             self.routine_process = Process(target=run_routine_subprocess, args=(self.data_queue, self.stop_event, self.pause_event))
             self.routine_process.start()
-            
             self.setup_timer()
             self.routine.data = None # reset data
             arg_dict = {
                 'routine': self.routine,
                 'termination_condition': self.termination_condition}
             self.data_queue.put(arg_dict)
+
 
         except BadgerRunTerminatedError as e:
             self.signals.finished.emit()
