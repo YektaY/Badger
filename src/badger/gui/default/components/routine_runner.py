@@ -216,14 +216,22 @@ class BadgerRoutineSubprocess():
             self.stop_event = Event()
             self.pause_event = Event()
 
-            self.routine_process = Process(target=run_routine_subprocess, args=(self.data_queue, self.stop_event, self.pause_event))
-            self.routine_process.start()
-            self.setup_timer()
-            self.routine.data = None # reset data
+            self.routine_process = Process(target=run_routine_subprocess, args=(self.data_queue, self.stop_event, self.pause_event,))
+            
             arg_dict = {
                 'routine': self.routine,
                 'termination_condition': self.termination_condition}
             self.data_queue.put(arg_dict)
+            self.routine_process.start()
+            self.setup_timer()
+            #self.routine.data = None # reset data
+
+            print(self.routine.data, "before")
+
+
+            
+            print("PUTTING TIME")
+            #self.data_queue.put(arg_dict)
 
 
         except BadgerRunTerminatedError as e:

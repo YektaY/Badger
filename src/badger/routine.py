@@ -1,36 +1,18 @@
+
 import json
 from copy import deepcopy
-from typing import Optional, List, Any, Dict
+from typing import Optional, List, Any
 
 import pandas as pd
 from pandas import DataFrame
 from pydantic import ConfigDict, Field, model_validator, field_validator, \
     ValidationInfo, SerializeAsAny
-from xopt import Xopt, VOCS, Evaluator
-from xopt.generators import get_generator
-
-from badger.environment import Environment, instantiate_env
-from badger.factory import get_env
+from xopt import Xopt, Evaluator
 from badger.utils import curr_ts
-from functools import partial
+from badger.environment import Environment, instantiate_env
 
-def evaluate_point(env, data, point: dict):
-    """
-    """
-    # sanitize inputs
-    point = pd.Series(point).explode().to_dict()
-    env._set_variables(point)
-    obs = env._get_observables(data["vocs"].output_names)
-
-    ts = curr_ts()
-    obs['timestamp'] = ts.timestamp()
-
-    return obs
 
 class Routine(Xopt):
-    """
-    Class Description Goes Here 
-    """ 
     name: str
     description: Optional[str] = Field(None)
     environment: SerializeAsAny[Environment]
@@ -39,18 +21,21 @@ class Routine(Xopt):
     tags: Optional[List] = Field(None)
     script: Optional[str] = Field(None)
 
-    model_config = ConfigDict(arbitrary_types_allowed=True, extra = "ignore")
-        
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    
     @model_validator(mode="before")
     @classmethod
-    def validate_model(cls, data: Any):            
+    def validate_model(cls, data: Any):
+        from badger.factory import get_env
+
         if not isinstance(data, dict):
             return data 
 
         # validate vocs
         data = super().validate_model(data)
 
-        # validate data (if it exists)
+        # validate data (if it exists
         if "data" in data:
             if isinstance(data["data"], dict):
                 try:
@@ -60,15 +45,7 @@ class Routine(Xopt):
 
                 data["generator"].add_data(data["data"])
 
-        data = cls.setup_env(data)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-        return data
-        
-    def setup_env(data: Any):   
-        """
-        instantiate env
-        """
-        from badger.factory import get_env
-            
+        # instantiate env
         if isinstance(data["environment"], dict):
             # TODO: Actually we need this interface info, but
             # should be put somewhere else (in parallel with env?)
@@ -82,14 +59,25 @@ class Routine(Xopt):
             data["environment"] = instantiate_env(env_class, configs_env)
         else:  # should be an instantiated env already
             pass
-
+        
         # create evaluator
         env = data["environment"]
 
+        def evaluate_point(point: dict):
+            # sanitize inputs
+            point = pd.Series(point).explode().to_dict()
+            env._set_variables(point)
+            obs = env._get_observables(data["vocs"].output_names)
+
+            ts = curr_ts()
+            obs['timestamp'] = ts.timestamp()
+
+            return obs
+
         data["evaluator"] = Evaluator(function=evaluate_point)
 
-        return data 
-    
+        return data
+
     @field_validator("initial_points", mode="before")
     def validate_data(cls, v, info: ValidationInfo):
         if isinstance(v, dict):
@@ -99,9 +87,10 @@ class Routine(Xopt):
                 v = pd.DataFrame(v, index=[0])
 
         return v
-        
+
     @property
     def sorted_data(self):
+        print(self.data, "being called")
         data_copy = deepcopy(self.data)
         data_copy.index = data_copy.index.astype(int)
         data_copy.sort_index(inplace=True)
@@ -138,6 +127,9 @@ class Routine(Xopt):
             pass
 
         return json.dumps(dict_result)
+    
+    def __setstate__(self, data):
+        super().__init__(data) 
 
-
-        
+    def __getstate__(self):
+        super().dict()

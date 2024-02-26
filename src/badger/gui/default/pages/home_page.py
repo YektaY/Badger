@@ -21,7 +21,7 @@ from ....db import import_routines, export_routines
 from ....archive import load_run, delete_run
 from ....utils import get_header, strtobool
 from ....settings import read_value
-
+from typing import List
 
 stylesheet = '''
 QPushButton:hover:pressed
@@ -39,6 +39,9 @@ QPushButton
 '''
 
 class BadgerHomePage(QWidget):
+    """
+    The BadgerHomePage class is for initalizing the UI elements in the home page. 
+    """
     sig_routine_activated = pyqtSignal(bool)
 
     def __init__(self):
@@ -54,6 +57,9 @@ class BadgerHomePage(QWidget):
         self.load_all_runs()
 
     def init_ui(self):
+        """
+        Initalizes the UI elements.
+        """
         icon_ref = resources.files(__package__) / '../images/add.png'
         with resources.as_file(icon_ref) as icon_path:
             self.icon_add = QIcon(str(icon_path))
@@ -64,17 +70,12 @@ class BadgerHomePage(QWidget):
         with resources.as_file(icon_ref) as icon_path:
             self.icon_export = QIcon(str(icon_path))
 
-        # cool_font = QFont()
-        # cool_font.setWeight(QFont.DemiBold)
-        # cool_font.setPixelSize(13)
-
         # Set up the layout
         vbox = QVBoxLayout(self)
         vbox.setContentsMargins(0, 0, 0, 0)
         splitter = QSplitter(Qt.Horizontal)
         splitter.setStretchFactor(0, 0)
         splitter.setStretchFactor(1, 1)
-        # splitter.setSizes([100, 200])
         vbox.addWidget(splitter, 1)
 
         # Routine panel
@@ -86,7 +87,6 @@ class BadgerHomePage(QWidget):
         panel_search = QWidget()
         hbox_search = QHBoxLayout(panel_search)
         hbox_search.setContentsMargins(0, 0, 0, 0)
-        # hbox_search.setSpacing(8)
 
         self.sbar = sbar = search_bar()
         sbar.setFixedHeight(36)
@@ -98,7 +98,6 @@ class BadgerHomePage(QWidget):
         btn_new.setIcon(self.icon_add)
         btn_new.setToolTip('Create new routine')
         hbox_search.addWidget(sbar)
-        # hbox_search.addSpacing(4)
         hbox_search.addWidget(btn_new)
         vbox_routine.addWidget(panel_search)
 
@@ -205,6 +204,9 @@ class BadgerHomePage(QWidget):
         vbox_view.addWidget(status_bar)
 
     def config_logic(self):
+        """
+        
+        """
         self.colors = ['c', 'g', 'm', 'y', 'b', 'r', 'w']
         self.symbols = ['o', 't', 't1', 's', 'p', 'h', 'd']
 
@@ -243,13 +245,22 @@ class BadgerHomePage(QWidget):
         self.btn_import.clicked.connect(self.import_routines)
 
     def go_search(self):
+        """
+        FINE
+        """
         self.sbar.setFocus()
 
     def load_all_runs(self):
+        """
+        FINE
+        """
         runs = get_runs()
         self.cb_history.updateItems(runs)
 
     def create_new_routine(self):
+        """
+        Fine
+        """
         self.splitter_state = self.splitter_run.saveState()
         self.routine_editor.set_routine(None)
         self.tab_state = self.tabs.currentIndex()
@@ -259,6 +270,9 @@ class BadgerHomePage(QWidget):
         self.toggle_lock(True, 0)
 
     def select_routine(self, routine_item: QListWidgetItem):
+        """
+        TODO: CHANGE
+        """
         if self.prev_routine_item:
             try:
                 self.routine_list.itemWidget(self.prev_routine_item).deactivate()
@@ -289,12 +303,13 @@ class BadgerHomePage(QWidget):
         if not runs:  # auto plot will not be triggered
             self.run_monitor.init_plots(routine)
 
-        self.routine_list.itemWidget(routine_item).activate()
-
     def build_routine_list(self,
-                           routines: list[str],
-                           timestamps: list[str],
-                           descriptions: list[str]):
+                           routines: List[str],
+                           timestamps: List[str],
+                           descriptions: List[str]):
+        """
+        FINE?
+        """
         try:
             selected_routine = self.prev_routine_item.routine_name
         except Exception:
@@ -314,6 +329,9 @@ class BadgerHomePage(QWidget):
                 self.prev_routine_item = item
 
     def get_current_routines(self):
+        """
+        FINE
+        """
         keyword = self.sbar.text()
         tag_obj = self.filter_box.cb_obj.currentText()
         tag_reg = self.filter_box.cb_reg.currentText()
@@ -330,11 +348,17 @@ class BadgerHomePage(QWidget):
         return routines, timestamps, descriptions
 
     def refresh_routine_list(self):
+        """
+        Fine 
+        """
         routines, timestamps, descriptions = self.get_current_routines()
 
         self.build_routine_list(routines, timestamps, descriptions)
 
     def go_run(self, i: int):
+        """
+        TODO: NEEDS CHANGING  
+        """
         if self.cb_history.itemText(0) == 'Optimization in progress...':
             return
         # if self.cb_history.currentText() == 'Optimization in progress...':
@@ -367,15 +391,27 @@ class BadgerHomePage(QWidget):
         self.status_bar.set_summary(f'current routine: {self.current_routine.name}')
 
     def go_prev_run(self):
+        """
+        Fine
+        """
         self.cb_history.selectPreviousItem()
 
     def go_next_run(self):
+        """
+        Fine
+        """
         self.cb_history.selectNextItem()
 
     def inspect_solution(self, idx):
+        """
+        Fine
+        """
         self.run_table.selectRow(idx)
 
-    def solution_selected(self, r, c):
+    def solution_selected(self, r):
+        """
+        Fine
+        """
         self.run_monitor.jump_to_solution(r)
 
     def table_selection_changed(self):

@@ -12,6 +12,14 @@ from badger.utils import (
     curr_ts_to_str,
     dump_state,
 )
+#from db import list_routine, load_routine, remove_routine, get_runs_by_routine, get_runs
+from multiprocessing import Queue, Process, Event
+
+'''
+def build_routine(routine_data):
+    routine, timestamp = load_routine(routine_data)
+    return routine
+'''
 
 def check_run_status(self, routine, stop_process, pause_process, termination_condition = None):
         """
@@ -79,18 +87,27 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
 
     pause_process : 
     """
-    
     logger = logging.getLogger()
     handler = logging.FileHandler('subprocess.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
-    
-    args = queue.get()
 
+    print("ALIVE 1")
+
+    while True:
+        args = queue.get()
+        if args is None:
+            break
+
+    print(args, "ALIVE 2")
+
+    """
     # set required arguments 
     routine = args['routine']
+    print(routine.data, "after")
+    print("ALIVE 3")
 
     #logger.info(f"type {type(routine)}")
     logger.info(f"data {routine}")
@@ -145,6 +162,9 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
     # Nikita: more care about the setting var logic,
     # wait or consider timeout/retry
     # TODO: need to evaluate a single point at the time
+
+    print("DATA??")
+
     for _, ele in initial_points.iterrows():
         result = routine.evaluate_data(ele.to_dict())
         solution = convert_to_solution(result, routine)
@@ -201,4 +221,4 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
     except Exception as e:
         opt_logger.update(Events.OPTIMIZATION_END, solution_meta)
         raise e
-    
+    """
