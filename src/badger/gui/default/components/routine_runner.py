@@ -2,7 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import time
-from multiprocessing import Queue, Process, Event
+from multiprocessing import Queue, Process, Event, Manager, Pipe
 from pandas import DataFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QRunnable, QTimer
 from ....core import run_routine, Routine
@@ -201,7 +201,8 @@ class BadgerRoutineSubprocess():
         self.stop_event = None
         self.pause_event = None 
         self.routine_process = None 
-
+        self.is_killed = False
+        
     def set_termination_condition(self, termination_condition):
         self.termination_condition = termination_condition
 
@@ -210,29 +211,26 @@ class BadgerRoutineSubprocess():
         self.last_dump_time = None  # reset the timer
 
         try:
-            self.save_init_vars()
+                self.save_init_vars()
+                self.stop_event = Event()
+                self.pause_event = Event()
+                self.data_queue = Queue()
+                self.evaluate_queue = Queue()
 
-            self.data_queue = Queue()
-            self.stop_event = Event()
-            self.pause_event = Event()
+                arg_dict = {
+                    'routine': self.routine,
+                    'termination_condition': self.termination_condition}
+                
+                self.routine_process = Process(target=run_routine_subprocess, 
+                                               args=(self.data_queue, self.evaluate_queue, self.stop_event, self.pause_event,))
+                self.routine_process.start()
 
-            self.routine_process = Process(target=run_routine_subprocess, args=(self.data_queue, self.stop_event, self.pause_event,))
-            
-            arg_dict = {
-                'routine': self.routine,
-                'termination_condition': self.termination_condition}
-            self.data_queue.put(arg_dict)
-            self.routine_process.start()
-            self.setup_timer()
-            #self.routine.data = None # reset data
+                print("about to")
+                self.data_queue.put(arg_dict)
+                print("done")
 
-            print(self.routine.data, "before")
-
-
-            
-            print("PUTTING TIME")
-            #self.data_queue.put(arg_dict)
-
+                self.setup_timer()
+                #self.routine.data = None # reset data
 
         except BadgerRunTerminatedError as e:
             self.signals.finished.emit()
@@ -242,14 +240,14 @@ class BadgerRoutineSubprocess():
             self.signals.finished.emit()
             self.signals.error.emit(e)
 
+
     def setup_timer(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.check_queue)
-        self.timer.start(50) # hmm 50 milliseconds 
 
     def check_queue(self):
-        if not self.data_queue.empty():
-            results = self.data_queue.get()
+        if not self.evaluate_queue.empty():
+            results = self.evaluate_queue.get()
             self.after_evaluate()
 
     def after_evaluate(self):
@@ -264,15 +262,21 @@ class BadgerRoutineSubprocess():
 
     def stop_routine(self):
         self.stop_event.set()
-        self.routine_process.join(timeout=0.7) # hmm 0.7 seconds 
+        self.routine_process.join(timeout=2) # hmm 0.7 seconds 
         
         if self.routine_process.is_alive():
+            print('hard stop')
             self.routine_process.terminate()
         
         self.timer.stop()
+        print('Killed')
+        self.is_killed = True
 
     def ctrl_routine(self, pause):
         if pause:
             self.pause_event.set()
         else:
             self.pause_event.clear()
+
+
+

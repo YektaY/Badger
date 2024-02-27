@@ -75,7 +75,7 @@ def convert_to_solution(result: DataFrame, routine: Routine):
 
     return solution
 
-def run_routine_subprocess(queue, stop_process, pause_process) -> None:
+def run_routine_subprocess(queue, evaluate_queue, stop_process, pause_process) -> None:
     """
     Run the provided routine object using Xopt. This method is run as a subproccess
 
@@ -87,30 +87,23 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
 
     pause_process : 
     """
-    logger = logging.getLogger()
-    handler = logging.FileHandler('subprocess.log')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+    #logger = logging.getLogger()
+    #handler = logging.FileHandler('subprocess.log')
+    #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #handler.setFormatter(formatter)
+    #logger.addHandler(handler)
+    #logger.setLevel(logging.DEBUG)
 
-    print("ALIVE 1")
+    try:
+        args = queue.get(timeout=1)
+    except Exception as e:
+        print(f"Error in subprocess: {type(e).__name__}, {str(e)}")
 
-    while True:
-        args = queue.get()
-        if args is None:
-            break
-
-    print(args, "ALIVE 2")
-
-    """
     # set required arguments 
     routine = args['routine']
-    print(routine.data, "after")
-    print("ALIVE 3")
-
+    print(type(routine))
     #logger.info(f"type {type(routine)}")
-    logger.info(f"data {routine}")
+    #logger.info(f"data {routine}")
 
     # set optional arguments 
     try:
@@ -147,7 +140,7 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
     # Save system states if applicable
     states = environment.get_system_states()
     if save_states and (states is not None):
-        queue.put(states)
+        queue.put(states) # might need to change queue here 
 
     # Optimization starts
     print('')
@@ -163,7 +156,7 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
     # wait or consider timeout/retry
     # TODO: need to evaluate a single point at the time
 
-    print("DATA??")
+    print("reached here")
 
     for _, ele in initial_points.iterrows():
         result = routine.evaluate_data(ele.to_dict())
@@ -180,6 +173,7 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
         if not dump_file:
             dump_file = f"xopt_states_{ts_start}.yaml"
 
+    print("reached optimization")
     # perform optimization
     try:
         while True:
@@ -221,4 +215,3 @@ def run_routine_subprocess(queue, stop_process, pause_process) -> None:
     except Exception as e:
         opt_logger.update(Events.OPTIMIZATION_END, solution_meta)
         raise e
-    """

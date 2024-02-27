@@ -90,7 +90,6 @@ class Routine(Xopt):
 
     @property
     def sorted_data(self):
-        print(self.data, "being called")
         data_copy = deepcopy(self.data)
         data_copy.index = data_copy.index.astype(int)
         data_copy.sort_index(inplace=True)
@@ -128,8 +127,11 @@ class Routine(Xopt):
 
         return json.dumps(dict_result)
     
-    def __setstate__(self, data):
-        super().__init__(data) 
-
     def __getstate__(self):
-        super().dict()
+        return self.name 
+        
+    def __setstate__(self, data):
+        from .db import load_routine
+        print("called set", data)
+        routine,_ = load_routine(data)
+        self.__dict__.update(routine)

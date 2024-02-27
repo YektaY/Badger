@@ -1002,6 +1002,7 @@ class BadgerOptMonitor(QWidget):
         self.sig_del.emit()
 
     def set_run_action(self):
+        print("i am here!")
         if self.btn_stop.defaultAction() is not self.run_action:
             self.btn_stop.setDefaultAction(self.run_action)
 

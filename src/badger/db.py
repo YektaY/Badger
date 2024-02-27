@@ -244,6 +244,9 @@ def get_runs_by_routine(routine: str):
 
 @maybe_create_runs_db
 def get_runs():
+    """
+    FINE
+    """
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
     con = sqlite3.connect(db_run)
@@ -261,6 +264,9 @@ def get_runs():
 
 @maybe_create_runs_db
 def remove_run_by_filename(name):
+    """
+    FINE
+    """
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
     con = sqlite3.connect(db_run)
@@ -274,6 +280,9 @@ def remove_run_by_filename(name):
 
 @maybe_create_runs_db
 def remove_run_by_id(rid):
+    """
+    FINE
+    """
     db_run = os.path.join(BADGER_DB_ROOT, 'runs.db')
 
     con = sqlite3.connect(db_run)
@@ -286,6 +295,9 @@ def remove_run_by_id(rid):
 
 
 def import_routines(filename):
+    """
+    FINE
+    """
     con = sqlite3.connect(filename)
     cur = con.cursor()
 
@@ -316,6 +328,9 @@ def import_routines(filename):
 
 
 def export_routines(filename, routine_name_list):
+    """
+    FINE
+    """
     con = sqlite3.connect(filename)
     cur = con.cursor()
 

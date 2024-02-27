@@ -415,6 +415,9 @@ class BadgerHomePage(QWidget):
         self.run_monitor.jump_to_solution(r)
 
     def table_selection_changed(self):
+        """
+        Fine
+        """
         indices = self.run_table.selectedIndexes()
         if len(indices) == 1:  # let other method handles it
             return
@@ -434,6 +437,9 @@ class BadgerHomePage(QWidget):
         self.run_monitor.jump_to_solution(row)
 
     def toggle_lock(self, lock, lock_tab=1):
+        """
+        Fine
+        """
         if lock:
             self.panel_routine.setDisabled(True)
             self.history_nav_bar.setDisabled(True)
@@ -445,6 +451,9 @@ class BadgerHomePage(QWidget):
             self.tabs.setTabEnabled(1, True)
 
     def new_run(self):
+        """
+        Fine
+        """
         self.cb_history.insertItem(0, 'Optimization in progress...')
         self.cb_history.setCurrentIndex(0)
 
@@ -452,6 +461,9 @@ class BadgerHomePage(QWidget):
         reset_table(self.run_table, header)
 
     def run_name(self, name):
+        """
+        TODO: Might need changing 
+        """
         if self.prev_routine_item:
             runs = get_runs_by_routine(self.current_routine.name)
         else:
@@ -459,6 +471,9 @@ class BadgerHomePage(QWidget):
         self.cb_history.updateItems(runs)
 
     def progress(self, solution: DataFrame):
+        """
+        TODO: NEEDS CHANGING
+        """
         vocs = self.current_routine.vocs
         vars = list(solution[vocs.variable_names].to_numpy()[0])
         objs = list(solution[vocs.objective_names].to_numpy()[0])
@@ -524,6 +539,9 @@ class BadgerHomePage(QWidget):
         self.refresh_routine_list()
 
     def routine_description_updated(self, name, descr):
+        """
+        FINE
+        """
         for i in range(self.routine_list.count()):
             item = self.routine_list.item(i)
             if item is not None:
@@ -533,6 +551,9 @@ class BadgerHomePage(QWidget):
                     break
 
     def export_routines(self):
+        """
+        Fine
+        """
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filename, _ = QFileDialog.getSaveFileName(self, 'Export Badger routines', '', 'Database Files (*.db)', options=options)
@@ -554,6 +575,9 @@ class BadgerHomePage(QWidget):
             QMessageBox.critical(self, 'Export failed!', f'Export failed: {str(e)}')
 
     def import_routines(self):
+        """
+        FINE
+        """
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         filename, _ = QFileDialog.getOpenFileName(self, 'Import Badger routines',
