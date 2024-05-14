@@ -577,7 +577,7 @@ class BadgerOptMonitor(QWidget):
         routine_runner.signals.error.connect(self.on_error)
         routine_runner.signals.info.connect(self.on_info)
         routine_runner.signals.states.connect(self.states)
-
+        
         self.sig_pause.connect(routine_runner.ctrl_routine)
         self.sig_stop.connect(routine_runner.stop_routine)
 
@@ -841,9 +841,8 @@ class BadgerOptMonitor(QWidget):
         dialog.setDetailedText(details)
         dialog.exec_()
 
-    # Do not show info -- too distracting
     def on_info(self, msg):
-        pass
+        self.sig_status.emit(msg)
 
     def logbook(self):
         try:

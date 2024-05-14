@@ -152,6 +152,11 @@ class BadgerRoutineSubprocess:
         This method checks the subprocess for updates in the evaluate_queue.
         It is called by a QTimer every 100 miliseconds.
         """
+        if not self.data_queue.empty():
+            msg = self.data_queue.get()
+            if isinstance(msg, str):
+                self.signals.info.emit(msg)
+
         if self.evaluate_queue[1].poll():
             while self.evaluate_queue[1].poll():
                 results = self.evaluate_queue[1].recv()

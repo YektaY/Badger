@@ -1,11 +1,12 @@
 import logging
 import time
 import typing
-
+import asyncio
+import threading
 import pkg_resources
 import torch
 from pandas import concat, DataFrame
-
+from PyQt5.QtCore import QTimer, QThread, pyqtSignal, QObject, QMetaObject
 logger = logging.getLogger(__name__)
 
 import multiprocessing as mp
@@ -69,6 +70,40 @@ def convert_to_solution(result: DataFrame, routine: Routine):
 
     return solution
 
+
+class PausableTimer:
+    def __init__(self, time_limit, queue):
+        self.queue = queue
+        self.time_limit = time_limit
+        self.start_time = time.time()
+        self.elapsed_time = 0
+        self.event = threading.Event()
+        # self.event.set()  # Initially allow the timer to proceed
+        self.thread = threading.Thread(target=self.run)
+        self.thread.start()
+
+    def run(self):
+        while True:
+            self.event.wait()  # Only run when the event is set
+            current_time = time.time()
+            self.elapsed_time = current_time - self.start_time
+            if self.elapsed_time > self.time_limit:
+                print(f"Warning: The operation has taken more than {self.time_limit} seconds!")
+                message = "calculating..."
+                self.send_message(message)
+                self.event.clear()
+
+    def pause(self, message=''):
+        self.event.clear()  # Clear the event to pause
+        self.send_message('done')
+
+    def resume(self, message=''):
+        self.start_time = time.time() - self.elapsed_time  # Adjust start time to not count paused time
+        self.event.set()  # Set the event to resume
+
+    def send_message(self, message="") -> None:
+        msg = message
+        self.queue.put(msg) 
 
 def run_routine_subprocess(
     queue: mp.Queue,
@@ -156,6 +191,8 @@ def run_routine_subprocess(
         if not dump_file:
             dump_file = f"xopt_states_{ts_start}.yaml"
 
+    timer = PausableTimer(1, queue)
+
     # perform optimization
     try:
         while True:
@@ -178,12 +215,15 @@ def run_routine_subprocess(
                     dt = time.time() - start_time
                     if dt >= max_time:
                         raise BadgerRunTerminatedError
-
-            # TODO give user a message that a solution is being worked on.
+            
+            timer.resume()
 
             # generate points to observe
             candidates = routine.generator.generate(1)[0]
             candidates = DataFrame(candidates, index=[0])
+            time.sleep(1)
+
+            timer.pause()
 
             # TODO timer off + new timer for evaluate
             # TODO solution being evaluated
@@ -220,3 +260,6 @@ def run_routine_subprocess(
         opt_logger.update(Events.OPTIMIZATION_END, solution_meta)
         evaluate_queue[0].close()
         raise e
+
+
+        
