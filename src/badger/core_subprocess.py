@@ -89,7 +89,6 @@ def run_routine_subprocess(
     pause_process: mp.Event
     wait_event: mp.Event
     """
-    epics.ca.clear_cache()
     wait_event.wait()
 
     try:
