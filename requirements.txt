@@ -9,7 +9,4 @@ tqdm
 pytest
 pytest-qt
 pytest-mock
-pydantic
-orjson
-torch
 xopt
