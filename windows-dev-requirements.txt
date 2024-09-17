@@ -1,0 +1,4 @@
+pytorch
+codecov
+pytest-cov
+pytest-timeout
