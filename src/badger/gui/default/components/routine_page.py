@@ -314,6 +314,7 @@ class BadgerRoutinePage(QWidget):
         self.env_box.check_only_obj.setChecked(True)
         self.env_box.edit_obj.clear()
         self.env_box.obj_table.set_selected(objectives)
+        self.env_box.obj_table.addtl_obs(routine.additional_observables)
         self.env_box.obj_table.set_rules(routine.vocs.objectives)
 
         constraints = routine.vocs.constraints
@@ -936,7 +937,8 @@ class BadgerRoutinePage(QWidget):
                 relative_to_current=relative_to_current,
                 vrange_limit_options=vrange_limit_options,
                 initial_point_actions=initial_point_actions,
-                additional_variables=self.env_box.var_table.addtl_vars
+                additional_variables=self.env_box.var_table.addtl_vars,
+                additional_observables=self.env_box.obj_table.addtl_obs
             )
 
             # Check if any user warnings were caught
@@ -1005,3 +1007,6 @@ class BadgerRoutinePage(QWidget):
         remove_routine(name)
 
         return 0
+
+
+    
