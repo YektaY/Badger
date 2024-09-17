@@ -12,3 +12,4 @@ pytest-mock
 pydantic
 orjson
 torch
+xopt
