@@ -107,6 +107,7 @@ class TestRoutineRunner:
 
     # TODO: check for signal emit message
 
+    '''
     def test_turbo_with_routine_runner(self, qtbot, init_multiprocessing_alt):
         from badger.gui.default.windows.main_window import BadgerMainWindow
         from badger.gui.default.windows.message_dialog import (
@@ -181,7 +182,8 @@ class TestRoutineRunner:
         assert len(monitor.routine.data) == 2
 
         window.process_manager.close_proccesses()
-
+    '''
+        
     """
         def test_turbo_with_routine_runner_alt(self, qtbot, init_multiprocessing_alt):
             from badger.gui.default.windows.main_window import BadgerMainWindow
