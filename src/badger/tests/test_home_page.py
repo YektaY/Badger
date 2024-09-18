@@ -1,14 +1,12 @@
 import multiprocessing
 import pytest
-from PyQt5.QtCore import QEventLoop, QTimer
-
-if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn', force=True)
 
 def test_home_page_run_routine(qtbot):
     if multiprocessing.current_process().name != 'MainProcess':
-        return
+        return  # Prevent execution in child processes
 
+    # Import modules inside the function
+    from PyQt5.QtCore import QEventLoop, QTimer
     from badger.db import save_routine
     from badger.gui.default.windows.main_window import BadgerMainWindow
     from badger.tests.utils import (
@@ -57,3 +55,7 @@ def test_home_page_run_routine(qtbot):
         assert len(home_page.run_monitor.routine.data) == 3
 
     main_page.process_manager.close_proccesses()
+
+if __name__ == '__main__':
+    multiprocessing.set_start_method('spawn')
+    pytest.main([__file__])

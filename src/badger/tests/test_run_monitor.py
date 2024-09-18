@@ -17,9 +17,26 @@ from PyQt5.QtWidgets import QApplication, QMessageBox
 
 
 class TestRunMonitor:
-    @pytest.fixture(scope="session")
-    def init_multiprocessing(self):
-        multiprocessing.set_start_method("fork", force=True)
+    @classmethod
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_class(cls):
+        """
+        Class-level setup method to set the multiprocessing start method.
+        This fixture is autoused, so it runs automatically before any tests in the class.
+        """
+        if not cls.is_main_process():
+            return
+
+        # Set the multiprocessing start method
+        multiprocessing.set_start_method("spawn", force=True)
+
+    @staticmethod
+    def is_main_process():
+        return multiprocessing.current_process().name == "MainProcess"
+
+    def setup_method(self, method):
+        if not self.is_main_process():
+            pytest.skip("Not in main process")
 
     @pytest.fixture
     def process_manager(self):
@@ -35,7 +52,7 @@ class TestRunMonitor:
         process_manager.close_proccesses()
 
     @pytest.fixture
-    def monitor(self, process_manager, init_multiprocessing):
+    def monitor(self, process_manager):
         from badger.db import save_routine
         from badger.gui.default.components.run_monitor import BadgerOptMonitor
         from badger.tests.utils import create_routine, fix_db_path_issue
@@ -87,7 +104,7 @@ class TestRunMonitor:
         time.sleep(1)
         QTest.mouseClick(monitor.btn_stop, Qt.MouseButton.LeftButton)
 
-    def test_routine_identity(self, qtbot, process_manager, init_multiprocessing):
+    def test_routine_identity(self, qtbot, process_manager):
         from badger.db import save_routine
         from badger.gui.default.components.run_monitor import BadgerOptMonitor
         from badger.tests.utils import create_routine, fix_db_path_issue
@@ -343,7 +360,7 @@ class TestRunMonitor:
         # Check if it is going to be the optimal solution
         assert max_value == optimal_value
 
-    def test_reset_environment(self, qtbot, init_multiprocessing):
+    def test_reset_environment(self, qtbot):
         from badger.db import save_routine
         from badger.gui.default.windows.main_window import BadgerMainWindow
         from badger.tests.utils import (
@@ -476,7 +493,7 @@ class TestRunMonitor:
         assert len(monitor.routine.data) == 5
 
     """
-    def test_add_extensions(self, qtbot, process_manager, init_multiprocessing):
+    def test_add_extensions(self, qtbot, process_manager):
         from badger.gui.default.components.analysis_extensions import ParetoFrontViewer
         from badger.gui.default.components.run_monitor import BadgerOptMonitor
         from badger.tests.utils import create_routine
@@ -514,7 +531,7 @@ class TestRunMonitor:
         # assert monitor.extensions_palette.n_active_extensions == 0
     """
 
-    def test_critical_constraints(self, qtbot, process_manager, init_multiprocessing):
+    def test_critical_constraints(self, qtbot, process_manager):
         from badger.db import save_routine
         from badger.gui.default.components.run_monitor import BadgerOptMonitor
         from badger.tests.utils import create_routine_critical, fix_db_path_issue
@@ -548,7 +565,7 @@ class TestRunMonitor:
 
         assert len(monitor.routine.data) == 1  # early-termination due to violation
 
-    def test_ucb_user_warning(self, init_multiprocessing):
+    def test_ucb_user_warning(self):
         from badger.tests.utils import create_routine_constrained_ucb
 
         with warnings.catch_warnings(record=True) as caught_warnings:
@@ -561,7 +578,7 @@ class TestRunMonitor:
     # Note: this test will delete all the previous runs
     # you might want to run this test last
     # TODO: work out why monitor.plot_con still exists after the last routine is deleated
-    def test_del_last_run(self, qtbot, init_multiprocessing):
+    def test_del_last_run(self, qtbot):
         from badger.db import save_routine
         from badger.gui.default.windows.main_window import BadgerMainWindow
         from badger.tests.utils import create_routine, fix_db_path_issue
@@ -626,7 +643,6 @@ class TestRunMonitor:
         # Variables/objectives monitor should be cleared
         assert len(monitor.plot_var.items) == 0
         assert len(monitor.plot_obj.items) == 0
-
 
 # TODO: Test if logbook entry is created correctly and put into the
 # correct location when the logbook button is clicked

@@ -10,6 +10,26 @@ class TestCore:
     """
     This class is to provide unit test coverage for the core.py file.
     """
+    @classmethod
+    @pytest.fixture(scope='class', autouse=True)
+    def setup_class(cls):
+        """
+        Class-level setup method to set the multiprocessing start method.
+        This fixture is autoused, so it runs automatically before any tests in the class.
+        """
+        if not cls.is_main_process():
+            return
+
+        # Set the multiprocessing start method
+        multiprocessing.set_start_method("spawn", force=True)
+
+    @staticmethod
+    def is_main_process():
+        return multiprocessing.current_process().name == "MainProcess"
+
+    def setup_method(self, method):
+        if not self.is_main_process():
+            pytest.skip("Not in main process")
 
     @pytest.fixture
     def process_manager(self):
@@ -24,10 +44,6 @@ class TestCore:
         yield process_manager
 
         process_manager.close_proccesses()
-
-    @pytest.fixture(scope="session")
-    def init_multiprocessing(self):
-        multiprocessing.set_start_method("fork", force=True)
 
     @pytest.fixture(autouse=True, scope="function")
     def test_core_setup(self, *args, **kwargs) -> None:
@@ -52,7 +68,7 @@ class TestCore:
         self.points_eval_target = pd.DataFrame(data_eval_target)
 
     def test_run_routine_subprocess(
-        self, process_manager, init_multiprocessing
+        self, process_manager
     ) -> None:
         """
         A unit test to ensure the core functionality
@@ -90,26 +106,15 @@ class TestCore:
 
         data_queue.put(arg_dict)
         wait_event.set()
-        pause_event.set()
-
-        time.sleep(0.20)
-        routine_process.terminate()
-        time.sleep(1)
+        #pause_event.set()
 
         while evaluate_queue[1].poll():
             self.results = evaluate_queue[1].recv()
 
-        # assert len(self.candidates_list) == self.count - 1
-
+        #assert len(self.candidates_list) == self.count - 1
         assert len(self.results) == self.num_of_points
 
         assert self.states is None
-
-        """
-        path = "./test.yaml"
-        assert os.path.exists(path) is True
-        os.remove("./test.yaml")
-        """
 
     def test_convert_to_solution(self) -> None:
         pass
@@ -136,12 +141,10 @@ class TestCore:
             .equals(self.points_eval_target.astype(float))
         )
 
-    def test_run_turbo(self, process_manager, init_multiprocessing) -> None:
+    def test_run_turbo(self, process_manager) -> None:
         """
         A unit test to ensure TuRBO can run in Badger.
         """
-        return
-
         from badger.db import save_routine
         from badger.tests.utils import create_routine_turbo
 
@@ -182,14 +185,8 @@ class TestCore:
         while evaluate_queue[1].poll():
             self.results = evaluate_queue[1].recv()
 
-        # assert len(self.candidates_list) == self.count - 1
+        assert len(self.candidates_list) == self.count - 1
 
-        # assert len(self.results) == self.num_of_points
+        assert len(self.results) == self.num_of_points
 
         assert self.states is None
-
-        """
-        path = "./test.yaml"
-        assert os.path.exists(path) is True
-        os.remove("./test.yaml")
-        """
