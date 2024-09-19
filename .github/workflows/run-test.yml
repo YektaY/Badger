@@ -38,7 +38,7 @@ jobs:
     - name: Install xopt v2.1+
       shell: bash -el {0}
       run: |
-          pip install xopt 
+        mamba install -c conda-forge xopt 
     - name: Install python packages
       shell: bash -el {0}
       run: |
