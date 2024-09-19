@@ -272,7 +272,7 @@ class TestRunMonitor:
         monitor.on_mouse_click(mock_event)
 
         # Check type of value
-        assert isinstance(monitor.inspector_objective.value(), float)
+        assert isinstance(float(monitor.inspector_objective.value()), float)
         assert isinstance(monitor.inspector_variable.value(), float)
         if monitor.vocs.constraint_names:
             assert isinstance(monitor.inspector_constraint.value(), float)
