@@ -9,7 +9,7 @@ import numpy as np
 
 import pytest
 
-from PyQt5.QtCore import QEventLoop, QPointF, Qt, QTimer
+from PyQt5.QtCore import QEventLoop, QPointF, Qt, QTimer, QPoint
 
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtTest import QSignalSpy, QTest
@@ -143,6 +143,14 @@ class TestRunMonitor:
         remove_routine(monitor.routine)
 
     def test_click_graph(self, qtbot, monitor, mocker):
+        if sys.platform == 'win32':
+            # Adjust the mock event setup for Windows
+            mock_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(50, 50), Qt.LeftButton, Qt.NoButton, Qt.NoModifier)
+        else:
+            # Mock event for macOS/Linux
+            mock_event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(50, 50), Qt.LeftButton, Qt.NoButton, Qt.NoModifier)
+
+
         self.add_data(monitor)
         sig_inspect_spy = QSignalSpy(monitor.sig_inspect)
         monitor.plot_x_axis = True
@@ -153,7 +161,7 @@ class TestRunMonitor:
         orginal_value = monitor.inspector_variable.value()
         monitor.on_mouse_click(mock_event)
         new_variable_value = monitor.inspector_variable.value()
-
+        print(new_variable_value)
         assert new_variable_value != orginal_value
         assert len(sig_inspect_spy) == 1
 
