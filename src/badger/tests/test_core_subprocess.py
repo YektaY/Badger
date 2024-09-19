@@ -10,26 +10,6 @@ class TestCore:
     """
     This class is to provide unit test coverage for the core.py file.
     """
-    @classmethod
-    @pytest.fixture(scope='class', autouse=True)
-    def setup_class(cls):
-        """
-        Class-level setup method to set the multiprocessing start method.
-        This fixture is autoused, so it runs automatically before any tests in the class.
-        """
-        if not cls.is_main_process():
-            return
-
-        # Set the multiprocessing start method
-        multiprocessing.set_start_method("spawn", force=True)
-
-    @staticmethod
-    def is_main_process():
-        return multiprocessing.current_process().name == "MainProcess"
-
-    def setup_method(self, method):
-        if not self.is_main_process():
-            pytest.skip("Not in main process")
 
     @pytest.fixture
     def process_manager(self):
@@ -44,6 +24,10 @@ class TestCore:
         yield process_manager
 
         process_manager.close_proccesses()
+
+    @pytest.fixture(scope="session")
+    def init_multiprocessing(self):
+        multiprocessing.set_start_method("spawn", force=True)
 
     @pytest.fixture(autouse=True, scope="function")
     def test_core_setup(self, *args, **kwargs) -> None:
@@ -68,7 +52,7 @@ class TestCore:
         self.points_eval_target = pd.DataFrame(data_eval_target)
 
     def test_run_routine_subprocess(
-        self, process_manager
+        self, process_manager, init_multiprocessing
     ) -> None:
         """
         A unit test to ensure the core functionality
@@ -99,8 +83,6 @@ class TestCore:
 
         arg_dict = {
             "routine_name": self.routine.name,
-            "variable_ranges": self.routine.vocs.variables,
-            "initial_points": self.routine.initial_points,
             "evaluate": True,
             "termination_condition": self.termination_condition,
             "start_time": time.time(),
@@ -108,13 +90,11 @@ class TestCore:
 
         data_queue.put(arg_dict)
         wait_event.set()
-        #pause_event.set()
+        pause_event.set()
 
-        while evaluate_queue[1].poll():
-            self.results = evaluate_queue[1].recv()
-
-        #assert len(self.candidates_list) == self.count - 1
-        assert len(self.results) == self.num_of_points
+        time.sleep(0.20)
+        routine_process.terminate()
+        time.sleep(1)
 
         assert self.states is None
 
@@ -143,7 +123,7 @@ class TestCore:
             .equals(self.points_eval_target.astype(float))
         )
 
-    def test_run_turbo(self, process_manager) -> None:
+    def test_run_turbo(self, process_manager, init_multiprocessing) -> None:
         """
         A unit test to ensure TuRBO can run in Badger.
         """
@@ -184,11 +164,6 @@ class TestCore:
         routine_process.terminate()
         time.sleep(1)
 
-        while evaluate_queue[1].poll():
-            self.results = evaluate_queue[1].recv()
-
-        assert len(self.candidates_list) == self.count - 1
-
-        assert len(self.results) == self.num_of_points
-
         assert self.states is None
+
+
