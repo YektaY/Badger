@@ -271,11 +271,12 @@ class TestRunMonitor:
 
         monitor.on_mouse_click(mock_event)
 
-        # Check type of value
+        # Check type of value 
+        # Cast as float, since value is int on windows 
         assert isinstance(float(monitor.inspector_objective.value()), float)
-        assert isinstance(monitor.inspector_variable.value(), float)
+        assert isinstance(float(monitor.inspector_variable.value()), float)
         if monitor.vocs.constraint_names:
-            assert isinstance(monitor.inspector_constraint.value(), float)
+            assert isinstance(float(monitor.inspector_constraint.value()), float)
 
         # Switch between time and iterations and see if index changes
         current_index = monitor.inspector_variable.value()
