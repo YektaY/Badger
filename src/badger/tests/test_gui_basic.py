@@ -8,7 +8,7 @@ from PyQt5.QtCore import QEventLoop, Qt, QTimer
 
 @pytest.fixture(scope="session")
 def init_multiprocessing():
-    multiprocessing.set_start_method("fork", force=True)
+    multiprocessing.set_start_method("spawn", force=True)
 
 
 def test_gui_main(qtbot, init_multiprocessing):
