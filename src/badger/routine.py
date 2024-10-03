@@ -37,6 +37,8 @@ class Routine(Xopt):
     vrange_limit_options: Optional[dict] = Field(None)
     initial_point_actions: Optional[List] = Field(None)
     additional_variables: Optional[List[str]] = Field([])
+    additional_observables: Optional[List] = Field(None)
+    
     # Store relative to current params
     relative_to_current: Optional[bool] = Field(False)
     vrange_limit_options: Optional[dict] = Field(None)

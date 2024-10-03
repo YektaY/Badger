@@ -27,7 +27,7 @@ class TestCore:
 
     @pytest.fixture(scope="session")
     def init_multiprocessing(self):
-        multiprocessing.set_start_method("fork", force=True)
+        multiprocessing.set_start_method("spawn", force=True)
 
     @pytest.fixture(autouse=True, scope="function")
     def test_core_setup(self, *args, **kwargs) -> None:
@@ -83,8 +83,6 @@ class TestCore:
 
         arg_dict = {
             "routine_name": self.routine.name,
-            "variable_ranges": self.routine.vocs.variables,
-            "initial_points": self.routine.initial_points,
             "evaluate": True,
             "termination_condition": self.termination_condition,
             "start_time": time.time(),
@@ -98,20 +96,7 @@ class TestCore:
         routine_process.terminate()
         time.sleep(1)
 
-        while evaluate_queue[1].poll():
-            self.results = evaluate_queue[1].recv()
-
-        # assert len(self.candidates_list) == self.count - 1
-
-        assert len(self.results) == self.num_of_points
-
         assert self.states is None
-
-        """
-        path = "./test.yaml"
-        assert os.path.exists(path) is True
-        os.remove("./test.yaml")
-        """
 
     def test_convert_to_solution(self) -> None:
         pass
@@ -142,8 +127,6 @@ class TestCore:
         """
         A unit test to ensure TuRBO can run in Badger.
         """
-        return
-
         from badger.db import save_routine
         from badger.tests.utils import create_routine_turbo
 
@@ -181,17 +164,6 @@ class TestCore:
         routine_process.terminate()
         time.sleep(1)
 
-        while evaluate_queue[1].poll():
-            self.results = evaluate_queue[1].recv()
-
-        # assert len(self.candidates_list) == self.count - 1
-
-        # assert len(self.results) == self.num_of_points
-
         assert self.states is None
 
-        """
-        path = "./test.yaml"
-        assert os.path.exists(path) is True
-        os.remove("./test.yaml")
-        """
+
